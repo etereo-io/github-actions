@@ -7,6 +7,10 @@ inputs:
     description: 'Path to the helm chart to package and publish'
     required: true
     default: ''
+  helmRepoFilePath:
+    description: 'Path to the encrypted helm repos file'
+    required: true
+    default: 'helm.repositories.yaml'
   helmChartPackageVersion:
     description: 'Version of the helm chart to publish'
     required: true
