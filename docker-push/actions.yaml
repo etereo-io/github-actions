@@ -11,6 +11,10 @@ inputs:
     description: 'Url of the docker image'
     required: true
     default: ''
+  dockerImageTag:
+    description: 'Docker image tag'
+    required: false
+    default: $GITHUB_SHA
   gcpProjectId:
     description: 'Project id where the kubernetes cluster is located'
     required: true
@@ -33,5 +37,5 @@ runs:
     - name: Build and push docker image
       run: |-
         docker build . -f ${{ inputs.dockerfilePath }} -t ${{ inputs.dockerImageUrl }}
-        docker tag ${{ inputs.dockerImageUrl }} ${{ inputs.dockerImageUrl }}:$GITHUB_SHA
-        docker push -t ${{ inputs.dockerImageUrl }}:$GITHUB_SHA
+        docker tag ${{ inputs.dockerImageUrl }} ${{ inputs.dockerImageUrl }}:${{ inputs.dockerImageTag }}
+        docker push -t ${{ inputs.dockerImageUrl }}:${{ inputs.dockerImageTag }}
