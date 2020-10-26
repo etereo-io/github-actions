@@ -1,0 +1,96 @@
+name: Continuous delivery to kubernetes cluster
+author: etereoio
+description: |-
+  Deploy your applications to kubernetes using helm
+inputs:
+  helmRepoFilePath:
+    description: 'Path to the encrypted helm repos file'
+    required: false
+    default: 'helm.repositories.yaml'
+  helmfileName:
+    description: 'Name of the helmfile config'
+    required: false
+    default: 'helmfile.yaml'
+  baseDeployDir:
+    description: 'Directory where different deployment enviroment folders are placed'
+    required: false
+    default: 'deploy'
+  environment:
+    description: 'Environment where to deploy the application. Must match with a the folder name inside 'baseDeployDir'. Inside the folder path a helmfile inside have to be placed'
+    required: true
+    default: ''
+  gcpProjectId:
+    description: 'Project id where the kubernetes cluster is located'
+    required: true
+    default: ''
+  gcpServiceAccountKey:
+    description: 'Gcp service account key to use for authentication agains gcp'
+    required: true
+    default: ''
+  gkeClusterName:
+    description: 'GKE k8s cluster name'
+    required: true
+    default: ''
+  gcpClusterZone:
+    description: 'Gcp zone where the cluster is located'
+    required: true
+    default: ''
+  privateRepositories:
+    description: 'Gcp zone where the cluster is located'
+    required: true
+    default: ''
+  helmfileVersion:
+    description: 'Version of helmfile'
+    required: false
+    default: 'v0.132.0'
+  replaceDockerImage:
+    description: 'Flag that indicates if docker image value must be set before deploying the application to k8s'
+    required: false
+    default: false
+outputs:
+  sum: # id of the output
+    description: 'The sum of the inputs'
+runs:
+  using: "composite"
+  steps:
+    - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ inputs.gcpProjectId }}
+        service_account_key: ${{ inputs.gcpServiceAccountKey }}
+        export_default_credentials: true
+    - name: Download sops binary for decrypting enc. helmfile
+      run: |-
+        curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -p /usr/local/bin/sops
+        chmod +x /usr/local/bin/sops
+    - name: Decrypt helm repositories file using sops
+      run: sops -d ${{ inputs.helmRepoFilePath }} > ${{ inputs.helmRepoFilePath }}.dec
+    - name: Get gke cluster credentials
+      run: gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
+    - name: Add helm repositories
+      run: |-
+        counter=0
+        REPO_FILE="${{ inputs.helmRepoFilePath }}.dec"
+        for repo in $(jq -r '.repositories[].name' "$REPO_FILE") ; do
+          echo "Adding helm repo: $repo"
+          HELM_LOCAL_USER="$(jq -r ".repositories[$counter].username | select (.!=null)" "$REPO_FILE")"
+          HELM_LOCAL_PASS="$(jq -r ".repositories[$counter].password | select (.!=null)" "$REPO_FILE")"
+          HELM_LOCAL_URL="$(jq -r ".repositories[$counter].url | select (.!=null)" "$REPO_FILE")"
+          if [ -n  "$HELM_LOCAL_USER" ] ; then
+            helm repo add $repo $HELM_LOCAL_URL --username \"$HELM_LOCAL_USER\" --password \"$HELM_LOCAL_PASS\"
+          else
+            helm repo add $repo $HELM_LOCAL_URL
+          fi
+          ((counter=counter+1))
+        done
+    - name: Download helmfile binary
+      run: |-
+        curl -L https://github.com/roboll/helmfile/releases/download/${{ inputs.helmfileVersion }}/helmfile_linux_amd64 -o /usr/local/bin/helmfile
+        chmod +x /usr/local/bin/helmfile
+    - name: Install helm-secrets helm plugin
+      run: helm plugin install https://github.com/zendesk/helm-secrets
+    - name: Syncronize helm releases using helmfile and replacing docker image
+      if: ${{ inputs.replaceDockerImage }}
+      run: helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} --state-values-set deployment.tag=$GITHUB_SHA
+    - name: Syncronize helm releases using helmfile
+      if: ! ${{ inputs.replaceDockerImage }}
+      run: helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }}
