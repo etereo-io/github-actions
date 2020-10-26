@@ -35,16 +35,20 @@ inputs:
     description: 'Gcp zone where the cluster is located'
     required: true
     default: ''
-  privateRepositories:
-    description: 'Gcp zone where the cluster is located'
-    required: true
-    default: ''
   helmfileVersion:
     description: 'Version of helmfile'
     required: false
     default: 'v0.132.0'
-  replaceDockerImage:
+  replaceDockerImageTag:
     description: 'Flag that indicates if docker image value must be set before deploying the application to k8s'
+    required: false
+    default: false
+  dockerImageTag:
+    description: 'Docker image tag to be placed in the helm chart values. Require replaceDockerImage attr set to true'
+    required: false
+    default: 'latest'
+  dynamicNamespace:
+    description: 'Forces deployment to a dinamyc environment. The k8s namespace name comes from the github branch name that triggers the event'
     required: false
     default: false
 outputs:
@@ -88,9 +92,14 @@ runs:
         chmod +x /usr/local/bin/helmfile
     - name: Install helm-secrets helm plugin
       run: helm plugin install https://github.com/zendesk/helm-secrets
+    - name: Exports namespace name
+      if: ${{ inputs.dynamicNamespace == true }}
+      run: |-
+        NAMESPACE_NAME="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+        echo "::set-output namespace_name=$NAMESPACE_NAME"
     - name: Syncronize helm releases using helmfile and replacing docker image
-      if: ${{ inputs.replaceDockerImage }}
-      run: helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} --state-values-set deployment.tag=$GITHUB_SHA
+      if: ${{ inputs.replaceDockerImage == true }}
+      run: helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} -n ${{ outputs.namespace_name }} --state-values-set deployment.tag=${{ inputs.dockerImageTag }}
     - name: Syncronize helm releases using helmfile
-      if: ! ${{ inputs.replaceDockerImage }}
-      run: helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }}
+      if: ${{ inputs.replaceDockerImage == false }}
+      run: helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} -n ${{ outputs.namespace_name }}

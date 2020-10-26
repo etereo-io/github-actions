@@ -24,8 +24,8 @@ inputs:
     required: true
     default: ''
 outputs:
-  sum: # id of the output
-    description: 'The sum of the inputs'
+  docker_image_sha: # id of the output
+    description: 'The sha 256 of the published docker image'
 runs:
   using: "composite"
   steps:
@@ -37,5 +37,8 @@ runs:
     - name: Build and push docker image
       run: |-
         docker build . -f ${{ inputs.dockerfilePath }} -t ${{ inputs.dockerImageUrl }}
-        docker tag ${{ inputs.dockerImageUrl }} ${{ inputs.dockerImageUrl }}:${{ inputs.dockerImageTag }}
-        docker push -t ${{ inputs.dockerImageUrl }}:${{ inputs.dockerImageTag }}
+        IMAGE_URL=${{ inputs.dockerImageUrl }}:${{ inputs.dockerImageTag }}
+        docker tag ${{ inputs.dockerImageUrl }} $IMAGE_URL
+        docker push -t $IMAGE_URL
+        DOCKER_IMAGE_SHA=$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_URL)
+        echo "::set-output name=docker_image_sha::$DOCKER_IMAGE_SHA"
