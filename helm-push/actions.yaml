@@ -29,8 +29,18 @@ inputs:
     default: ''
   dockerImageTag:
     description: 'Docker image tag to be placed in the helm chart values'
+    required: true
+  dockerImageTagKeyPath:
+    description: 'Yaml path in dot notation to the docker image tag value to be replaced inside the helm chart'
     required: false
-    default: 'latest'
+    default: 'base.deployment.image.tag'
+  dockerImageDigest:
+    description: 'Docker image digest to be placed in the helm chart values'
+    required: true
+  dockerImageDigestKeyPath:
+    description: 'Yaml path in dot notation to the docker image digest value to be replaced inside the helm chart'
+    required: false
+    default: 'base.deployment.image.digest'
 outputs:
   sum: # id of the output
     description: 'The sum of the inputs'
@@ -66,7 +76,9 @@ runs:
         done
     - name: Install helm-push helm plugin
       run: helm plugin install https://github.com/chartmuseum/helm-push.git
-    - name: Override docker image to be used
-      run: yq w -i ${{ inputs.helmChartPath }}/values.yaml base.deployment.image.tag "${{ inputs.dockerImageTag }}"
+    - name: Override docker image tag to be used
+      run: yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageTagKeyPath}} "${{ inputs.dockerImageTag }}"
+    - name: Override docker image digest to be used
+      run: yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageDigestKeyPath}} "${{ inputs.dockerImageDigest }}"
     - name: Publish helm chart to chartmuseum
       run: helm push ${{ inputs.helmChartPath } ${{ inputs.chartMuseumRepoName }} --version=$GITHUB_REF
