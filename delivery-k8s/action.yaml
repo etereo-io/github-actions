@@ -58,14 +58,18 @@ runs:
   using: "composite"
   steps:
     - name: Download sops binary for decrypting enc. helmfile
+      shell: bash
       run: |-
         curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -p /usr/local/bin/sops
         chmod +x /usr/local/bin/sops
     - name: Decrypt helm repositories file using sops
+      shell: bash
       run: sops -d ${{ inputs.helmRepoFilePath }} > ${{ inputs.helmRepoFilePath }}.dec
     - name: Get gke cluster credentials
+      shell: bash
       run: gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
     - name: Add helm repositories
+      shell: bash
       run: |-
         counter=0
         REPO_FILE="${{ inputs.helmRepoFilePath }}.dec"
@@ -82,19 +86,22 @@ runs:
           ((counter=counter+1))
         done
     - name: Download helmfile binary
+      shell: bash
       run: |-
         curl -L https://github.com/roboll/helmfile/releases/download/${{ inputs.helmfileVersion }}/helmfile_linux_amd64 -o /usr/local/bin/helmfile
         chmod +x /usr/local/bin/helmfile
     - name: Install helm-secrets helm plugin
+      shell: bash
       run: helm plugin install https://github.com/zendesk/helm-secrets
     - name: Exports namespace name
+      shell: bash
       run: |-
         if [ "${{ inputs.dynamicNamespace}}" == "true" ]; then
           NAMESPACE_NAME="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
           echo "::set-output namespace_name=$NAMESPACE_NAME"
         fi
     - name: Syncronize helm releases using helmfile and replacing docker image digest
-      if: ${{ inputs.dockerImageDigest != '' }}
+      shell: bash
       run: |-
         HELM_EXTRA_ARGS=""
 

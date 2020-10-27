@@ -48,12 +48,15 @@ runs:
   using: "composite"
   steps:
     - name: Download sops binary for decrypting enc. helm repository file
+      shell: bash
       run: |-
         curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -p /usr/local/bin/sops
         chmod +x /usr/local/bin/sops
     - name: Decrypt enc. helmfile using sops
+      shell: bash
       run: sops -d ${{ inputs.helmRepoFilePath }} > ${{ inputs.helmRepoFilePath }}.dec
     - name: Add helm repositories
+      shell: bash
       run: |-
         counter=0
         REPO_FILE="${{ inputs.helmRepoFilePath }}.dec"
@@ -70,10 +73,14 @@ runs:
           ((counter=counter+1))
         done
     - name: Install helm-push helm plugin
+      shell: bash
       run: helm plugin install https://github.com/chartmuseum/helm-push.git
     - name: Override docker image tag to be used
+      shell: bash
       run: yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageTagKeyPath}} "${{ inputs.dockerImageTag }}"
     - name: Override docker image digest to be used
+      shell: bash
       run: yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageDigestKeyPath}} "${{ inputs.dockerImageDigest }}"
     - name: Publish helm chart to chartmuseum
+      shell: bash
       run: helm push ${{ inputs.helmChartPath } ${{ inputs.chartMuseumRepoName }} --version=$GITHUB_REF

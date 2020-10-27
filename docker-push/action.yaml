@@ -30,6 +30,7 @@ runs:
   using: "composite"
   steps:
     - name: Build and push docker image
+      shell: bash
       run: |-
         docker build . -f ${{ inputs.dockerfilePath }} -t ${{ inputs.dockerImageUrl }}
         IMAGE_URL=${{ inputs.dockerImageUrl }}:${{ inputs.dockerImageTag }}
