@@ -93,13 +93,22 @@ runs:
     - name: Install helm-secrets helm plugin
       run: helm plugin install https://github.com/zendesk/helm-secrets
     - name: Exports namespace name
-      if: ${{ inputs.dynamicNamespace == true }}
       run: |-
-        NAMESPACE_NAME="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
-        echo "::set-output namespace_name=$NAMESPACE_NAME"
+        if [ "${{ inputs.dynamicNamespace}}" == "true" ]; then
+          NAMESPACE_NAME="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+          echo "::set-output namespace_name=$NAMESPACE_NAME"
+        fi
     - name: Syncronize helm releases using helmfile and replacing docker image digest
       if: ${{ inputs.dockerImageDigest != '' }}
-      run: helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} -n ${{ outputs.namespace_name }} --state-values-set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}
-    - name: Syncronize helm releases using helmfile
-      if: ${{ inputs.dockerImageTag == '' }}
-      run: helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} -n ${{ outputs.namespace_name }}
+      run: |-
+        HELM_EXTRA_ARGS=""
+
+        if [ "${{ inputs.dynamicNamespace}}" == "true" ]; then
+          HELM_EXTRA_ARGS+="-n ${{ outputs.namespace_name }}"
+        fi
+
+        if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
+          HELM_EXTRA_ARGS+="--state-values-set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
+        fi
+
+        helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} $HELM_EXTRA_ARGS
