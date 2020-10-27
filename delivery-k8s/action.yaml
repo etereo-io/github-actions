@@ -58,8 +58,8 @@ runs:
       shell: bash
       run: |-
         curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -O
-        mv sops-v3.6.1.linux /usr/local/bin/sops
-        chmod +x /usr/local/bin/sops
+        mv sops-v3.6.1.linux sops
+        chmod +x sops
     - name: Decrypt helm repositories file using sops
       shell: bash
       run: sops -d ${{ inputs.helmRepoFilePath }} > ${{ inputs.helmRepoFilePath }}.dec
