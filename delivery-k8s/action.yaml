@@ -57,7 +57,9 @@ runs:
     - name: Download sops binary for decrypting enc. helmfile
       shell: bash
       run: |-
+        echo "Downloading sops binary"
         curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -p /usr/local/bin/sops
+        echo "Adding execution permissions to sops binary"
         chmod +x /usr/local/bin/sops
     - name: Decrypt helm repositories file using sops
       shell: bash
@@ -93,6 +95,8 @@ runs:
     - name: Syncronize helm releases using helmfile and replacing docker image digest
       shell: bash
       run: |-
+        echo "Deploying helm release using helmfile"
+
         HELM_EXTRA_ARGS=""
 
         NAMESPACE="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
