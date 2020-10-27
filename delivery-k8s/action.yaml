@@ -98,7 +98,7 @@ runs:
       run: |-
         if [ "${{ inputs.dynamicNamespace}}" == "true" ]; then
           NAMESPACE_NAME="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
-          echo "::set-output namespace_name=$NAMESPACE_NAME"
+          echo "::set-output name=namespace_name::$NAMESPACE_NAME"
         fi
     - name: Syncronize helm releases using helmfile and replacing docker image digest
       shell: bash
