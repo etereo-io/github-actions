@@ -32,6 +32,7 @@ runs:
     - name: Build and push docker image
       shell: bash
       run: |-
+        gcloud auth configure-docker
         docker build . -f ${{ inputs.dockerfilePath }} -t ${{ inputs.dockerImageUrl }}
         IMAGE_URL=${{ inputs.dockerImageUrl }}:${{ inputs.dockerImageTag }}
         docker tag ${{ inputs.dockerImageUrl }} $IMAGE_URL
