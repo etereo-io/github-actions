@@ -47,11 +47,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-      with:
-        project_id: ${{ inputs.gcpProjectId }}
-        service_account_key: ${{ inputs.gcpServiceAccountKey }}
-        export_default_credentials: true
     - name: Download sops binary for decrypting enc. helm repository file
       run: |-
         curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -p /usr/local/bin/sops
