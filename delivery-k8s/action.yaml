@@ -97,7 +97,7 @@ runs:
 
         if [ "${{ inputs.dynamicNamespace}}" == "true" ]; then
           NAMESPACE_NAME="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
-          HELM_EXTRA_ARGS+="-n ${{ outputs.namespace_name }}"
+          HELM_EXTRA_ARGS+="-n $NAMESPACE_NAME"
         fi
 
         if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
