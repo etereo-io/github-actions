@@ -40,5 +40,5 @@ runs:
         IMAGE_URL=${{ inputs.dockerImageUrl }}:${{ inputs.dockerImageTag }}
         docker tag ${{ inputs.dockerImageUrl }} $IMAGE_URL
         docker push -t $IMAGE_URL
-        DOCKER_IMAGE_SHA=$(docker inspect --format='{{index .RepoDigests 0}}' $IMAGE_URL)
+        DOCKER_IMAGE_SHA=$(docker images --no-trunc --quiet $IMAGE_URL)
         echo "::set-output name=docker_image_sha::$DOCKER_IMAGE_SHA"
