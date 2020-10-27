@@ -16,7 +16,7 @@ inputs:
     required: false
     default: 'deploy'
   environment:
-    description: 'Environment where to deploy the application. Must match with a the folder name inside 'baseDeployDir'. Inside the folder path a helmfile inside have to be placed'
+    description: 'Environment where to deploy the application. Must match with a the folder name inside "baseDeployDir". Inside the folder path a helmfile inside have to be placed'
     required: true
     default: ''
   gcpProjectId:
