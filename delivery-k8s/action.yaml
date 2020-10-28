@@ -77,9 +77,10 @@ runs:
       shell: bash
       run: |-
         echo "Adding helm repositories"
-        counter="0"
+        counter=0
         echo "Exporting REPO_FILE variable"
         REPO_FILE="./helm.repositories.dec.yaml"
+        echo $(jq -r '.repositories[].name' "$REPO_FILE")
         for repo in $(jq -r '.repositories[].name' "$REPO_FILE") ; do
           echo "Adding helm repo: $repo"
           HELM_LOCAL_USER="$(jq -r ".repositories[$counter].username | select (.!=null)" "$REPO_FILE")"
