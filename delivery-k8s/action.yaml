@@ -90,8 +90,9 @@ runs:
     - name: Download helmfile binary
       shell: bash
       run: |-
-        curl -L https://github.com/roboll/helmfile/releases/download/${{ inputs.helmfileVersion }}/helmfile_linux_amd64 -o /usr/local/bin/helmfile
-        chmod +x /usr/local/bin/helmfile
+        curl -L https://github.com/roboll/helmfile/releases/download/${{ inputs.helmfileVersion }}/helmfile_linux_amd64 -O
+        mv helmfile_linux_amd64 helmfile
+        chmod +x ./helmfile
     - name: Install helm-secrets helm plugin
       shell: bash
       run: helm plugin install https://github.com/zendesk/helm-secrets
@@ -106,4 +107,4 @@ runs:
           HELM_EXTRA_ARGS+="--state-values-set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
         fi
 
-        helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} $HELM_EXTRA_ARGS
+        ./helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} $HELM_EXTRA_ARGS
