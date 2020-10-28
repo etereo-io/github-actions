@@ -76,7 +76,9 @@ runs:
     - name: Add helm repositories
       shell: bash
       run: |-
-        counter=0
+        echo "Adding helm repositories"
+        counter="0"
+        echo "Exporting REPO_FILE variable"
         REPO_FILE="./helm.repositories.dec.yaml"
         for repo in $(jq -r '.repositories[].name' "$REPO_FILE") ; do
           echo "Adding helm repo: $repo"
@@ -112,7 +114,7 @@ runs:
           export NAMESPACE+="-ft-$FEAT_NAME"
         elif [[ "$BRANCH_LOWER" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
           export NAMESPACE+="-hot-$FEAT_NAME"
-        else
+        elif
           export NAMESPACE+="-$FEAT_NAME"
         fi
 
