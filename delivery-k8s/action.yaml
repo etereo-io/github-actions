@@ -64,7 +64,7 @@ runs:
       shell: bash
       run: |-
         echo "Decrypting helm repositories in ${{ inputs.helmRepoFilePath }}"
-        sops -d ${{ inputs.helmRepoFilePath }} > ./helm.repositories.dec.yaml
+        ./sops -d ${{ inputs.helmRepoFilePath }} > ./helm.repositories.dec.yaml
     - name: Get gke cluster credentials
       shell: bash
       run: |-
