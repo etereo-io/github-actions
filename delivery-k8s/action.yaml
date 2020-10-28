@@ -109,6 +109,4 @@ runs:
           HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
         fi
 
-        helm repo list
-
         ./helmfile --file ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} sync $HELM_EXTRA_ARGS
