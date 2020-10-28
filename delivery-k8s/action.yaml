@@ -62,15 +62,19 @@ runs:
         chmod +x sops
     - name: Decrypt helm repositories file using sops
       shell: bash
-      run: sops -d ${{ inputs.helmRepoFilePath }} > ${{ inputs.helmRepoFilePath }}.dec
+      run: |-
+        echo "Decrypting helm repositories in ${{ inputs.helmRepoFilePath }}"
+        sops -d ${{ inputs.helmRepoFilePath }} > ${{ inputs.helmRepoFilePath }}.dec
     - name: Get gke cluster credentials
       shell: bash
-      run: gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
+      run: |-
+        echo "Get cluster credentials"
+        gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
     - name: Add helm repositories
       shell: bash
       run: |-
         counter=0
-        REPO_FILE="${{ inputs.helmRepoFilePath }}.dec"
+        REPO_FILE=${{ inputs.helmRepoFilePath }}.dec
         for repo in $(jq -r '.repositories[].name' "$REPO_FILE") ; do
           echo "Adding helm repo: $repo"
           HELM_LOCAL_USER="$(jq -r ".repositories[$counter].username | select (.!=null)" "$REPO_FILE")"
