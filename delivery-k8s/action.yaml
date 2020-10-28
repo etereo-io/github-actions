@@ -93,8 +93,10 @@ runs:
           HELM_LOCAL_PASS="$(jq -r ".repositories[$counter].password | select (.!=null)" "$REPO_FILE")"
           HELM_LOCAL_URL="$(jq -r ".repositories[$counter].url | select (.!=null)" "$REPO_FILE")"
           if [ -n  "$HELM_LOCAL_USER" ] ; then
+            echo "adding repo with auth credentials"
             helm repo add $repo $HELM_LOCAL_URL --username \"$HELM_LOCAL_USER\" --password \"$HELM_LOCAL_PASS\"
           else
+            echo "adding repo with no credentials"
             helm repo add $repo $HELM_LOCAL_URL
           fi
           ((counter=counter+1))
