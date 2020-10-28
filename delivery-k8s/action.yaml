@@ -64,6 +64,12 @@ runs:
         curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -O
         mv sops-v3.6.1.linux sops
         chmod +x sops
+    - name: Download yq binary for parse helm repos file
+      shell: bash
+      run: |-
+        curl -L https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 -O
+        mv yq_linux_amd64 yq
+        chmod +x ./yq
     - name: Decrypt helm repositories file using sops
       shell: bash
       run: |-
@@ -79,7 +85,7 @@ runs:
         echo "Adding helm repositories.."
         counter=0
         REPO_FILE="$(mktemp --suffix .json)"
-        yq r "./helm.repositories.dec.yaml" -j > "$REPO_FILE"
+        ./yq r "./helm.repositories.dec.yaml" -j > "$REPO_FILE"
         echo $(jq -r '.repositories[].name' "$REPO_FILE")
         for repo in $(jq -r '.repositories[].name' "$REPO_FILE") ; do
           echo "Adding helm repo: $repo"
