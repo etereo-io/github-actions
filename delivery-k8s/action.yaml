@@ -101,7 +101,7 @@ runs:
       run: |-
         HELM_EXTRA_ARGS=""
 
-        NAMESPACE="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+        export NAMESPACE="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
 
         if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
           HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
