@@ -19,6 +19,10 @@ inputs:
     description: 'Environment where to deploy the application. Must match with a the folder name inside "baseDeployDir". Inside the folder path a helmfile inside have to be placed'
     required: true
     default: ''
+  namespacePrefix:
+    description: 'Prefix of any namespace deployed in to the cluster'
+    required: true
+    default: ''
   gcpProjectId:
     description: 'Project id where the kubernetes cluster is located'
     required: true
@@ -65,11 +69,10 @@ runs:
       run: |-
         echo "Decrypting helm repositories in ${{ inputs.helmRepoFilePath }}"
         ./sops -d ${{ inputs.helmRepoFilePath }} > ./helm.repositories.dec.yaml
-    # - name: Get gke cluster credentials
-    #   shell: bash
-    #   run: |-
-    #     echo "Get cluster credentials"
-    #     gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
+    - name: Get gke cluster credentials
+      shell: bash
+      run: |-
+        gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
     - name: Add helm repositories
       shell: bash
       run: |-
@@ -99,11 +102,21 @@ runs:
     - name: Syncronize helm releases using helmfile and replacing docker image digest
       shell: bash
       run: |-
-        gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
+        BRANCH_LOWER="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+
+        FEAT_FULL_NAME="$(printf "%s" "${BRANCH_LOWER##*/}" )"
+        FEAT_NAME="${FEAT_FULL_NAME:0:30}"
+        NAMESPACE=${{ inputs.namespacePrefix }}
+
+        if [[ "$BRANCH_LOWER" =~ ${{ env.REGEX_FEATURE_BRANCH }} ]] ; then
+          export NAMESPACE+="-ft-$FEAT_NAME"
+        elif [[ "$BRANCH_LOWER" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
+          export NAMESPACE+="-hot-$FEAT_NAME"
+        else
+          export NAMESPACE+="-$FEAT_NAME"
+        fi
 
         HELM_EXTRA_ARGS=""
-
-        export NAMESPACE="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
 
         if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
           HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
