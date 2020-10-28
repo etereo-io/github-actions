@@ -107,4 +107,4 @@ runs:
           HELM_EXTRA_ARGS+="--state-values-set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
         fi
 
-        ./helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} $HELM_EXTRA_ARGS
+        ./helmfile sync --file ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} $HELM_EXTRA_ARGS
