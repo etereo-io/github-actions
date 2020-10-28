@@ -76,11 +76,10 @@ runs:
     - name: Add helm repositories
       shell: bash
       run: |-
-        echo "Adding helm repositories"
+        echo "Adding helm repositories.."
         counter=0
-        echo "Exporting REPO_FILE variable"
-        REPO_FILE="./helm.repositories.dec.yaml"
-        cat $REPO_FILE
+        REPO_FILE="$(mktemp --suffix .json)"
+        yq r "./helm.repositories.dec.yaml" -j > "$REPO_FILE"
         echo $(jq -r '.repositories[].name' "$REPO_FILE")
         for repo in $(jq -r '.repositories[].name' "$REPO_FILE") ; do
           echo "Adding helm repo: $repo"
