@@ -65,11 +65,11 @@ runs:
       run: |-
         echo "Decrypting helm repositories in ${{ inputs.helmRepoFilePath }}"
         ./sops -d ${{ inputs.helmRepoFilePath }} > ./helm.repositories.dec.yaml
-    - name: Get gke cluster credentials
-      shell: bash
-      run: |-
-        echo "Get cluster credentials"
-        gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
+    # - name: Get gke cluster credentials
+    #   shell: bash
+    #   run: |-
+    #     echo "Get cluster credentials"
+    #     gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
     - name: Add helm repositories
       shell: bash
       run: |-
@@ -99,6 +99,8 @@ runs:
     - name: Syncronize helm releases using helmfile and replacing docker image digest
       shell: bash
       run: |-
+        gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
+
         HELM_EXTRA_ARGS=""
 
         export NAMESPACE="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
@@ -106,5 +108,7 @@ runs:
         if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
           HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
         fi
+
+        helm repo list
 
         ./helmfile --file ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} sync $HELM_EXTRA_ARGS
