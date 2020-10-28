@@ -104,7 +104,7 @@ runs:
         NAMESPACE="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
 
         if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
-          HELM_EXTRA_ARGS+="--state-values-set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
+          HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
         fi
 
-        ./helmfile sync --file ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} $HELM_EXTRA_ARGS
+        ./helmfile --file ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} sync $HELM_EXTRA_ARGS
