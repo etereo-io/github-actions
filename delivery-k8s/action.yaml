@@ -90,13 +90,11 @@ runs:
         for repo in $(jq -r '.repositories[].name' "$REPO_FILE") ; do
           echo "Adding helm repo: $repo"
           HELM_LOCAL_USER="$(jq -r ".repositories[$counter].username | select (.!=null)" "$REPO_FILE")"
-          echo "USER: "$HELM_LOCAL_USER
           HELM_LOCAL_PASS="$(jq -r ".repositories[$counter].password | select (.!=null)" "$REPO_FILE")"
-          echo "PASS: "$HELM_LOCAL_PASS
           HELM_LOCAL_URL="$(jq -r ".repositories[$counter].url | select (.!=null)" "$REPO_FILE")"
           if [ -n  "$HELM_LOCAL_USER" ] ; then
             echo "adding repo with auth credentials"
-            helm repo add $repo $HELM_LOCAL_URL --username \"$HELM_LOCAL_USER\" --password \"$HELM_LOCAL_PASS\"
+            helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS
           else
             echo "adding repo with no credentials"
             helm repo add $repo $HELM_LOCAL_URL
