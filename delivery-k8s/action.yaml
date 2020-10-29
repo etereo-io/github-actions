@@ -123,7 +123,7 @@ runs:
           export NAMESPACE+="-ft-$FEAT_NAME"
         elif [[ "$BRANCH_LOWER" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
           export NAMESPACE+="-hot-$FEAT_NAME"
-        elif
+        else
           export NAMESPACE+="-$FEAT_NAME"
         fi
 
