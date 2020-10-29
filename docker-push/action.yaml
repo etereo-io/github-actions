@@ -38,4 +38,5 @@ runs:
         docker tag ${{ inputs.dockerImageUrl }} $IMAGE_URL
         docker push $IMAGE_URL
         DOCKER_IMAGE_SHA=$(docker images --no-trunc --quiet $IMAGE_URL)
+        echo "Exporting digest: "$DOCKER_IMAGE_SHA
         echo "::set-output name=docker_image_sha::$DOCKER_IMAGE_SHA"
