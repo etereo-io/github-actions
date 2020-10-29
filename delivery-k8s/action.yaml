@@ -73,7 +73,6 @@ runs:
     - name: Decrypt helm repositories file using sops
       shell: bash
       run: |-
-        echo "Decrypting helm repositories in ${{ inputs.helmRepoFilePath }}"
         ./sops -d ${{ inputs.helmRepoFilePath }} > ./helm.repositories.dec.yaml
     - name: Get gke cluster credentials
       shell: bash
@@ -93,10 +92,8 @@ runs:
           HELM_LOCAL_PASS="$(jq -r ".repositories[$counter].password | select (.!=null)" "$REPO_FILE")"
           HELM_LOCAL_URL="$(jq -r ".repositories[$counter].url | select (.!=null)" "$REPO_FILE")"
           if [ -n  "$HELM_LOCAL_USER" ] ; then
-            echo "adding repo with auth credentials"
             helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS
           else
-            echo "adding repo with no credentials"
             helm repo add $repo $HELM_LOCAL_URL
           fi
           ((counter=counter+1))
@@ -119,18 +116,26 @@ runs:
         FEAT_NAME="${FEAT_FULL_NAME:0:30}"
         NAMESPACE=${{ inputs.namespacePrefix }}
 
+        echo "env.REGEX_FEATURE_BRANCH: "${{ env.REGEX_FEATURE_BRANCH }}
+
         if [[ "$BRANCH_LOWER" =~ ${{ env.REGEX_FEATURE_BRANCH }} ]] ; then
           export NAMESPACE+="-ft-$FEAT_NAME"
+          echo "Feature"
         elif [[ "$BRANCH_LOWER" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
           export NAMESPACE+="-hot-$FEAT_NAME"
+          echo "Hot"
         else
           export NAMESPACE+="-$FEAT_NAME"
+          echo "default"
         fi
 
         HELM_EXTRA_ARGS=""
 
         if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
+          echo "Adding docker image digest"
+          echo "${{ inputs.dockerImageDigest}}"
           HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
+          echo $HELM_EXTRA_ARGS
         fi
 
         ./helmfile --file ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} sync $HELM_EXTRA_ARGS
