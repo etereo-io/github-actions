@@ -131,11 +131,12 @@ runs:
 
         HELM_EXTRA_ARGS=""
 
+        echo "DIGEST: ${{ inputs.dockerImageDigest}}"
+
         if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
           echo "Adding docker image digest"
           echo "${{ inputs.dockerImageDigest}}"
           HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
-          echo $HELM_EXTRA_ARGS
         fi
 
         ./helmfile --file ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} sync $HELM_EXTRA_ARGS
