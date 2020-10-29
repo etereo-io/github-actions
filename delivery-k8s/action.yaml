@@ -116,12 +116,12 @@ runs:
         FEAT_NAME="${FEAT_FULL_NAME:0:30}"
         NAMESPACE=${{ inputs.namespacePrefix }}
 
-        echo "env.REGEX_FEATURE_BRANCH: "${{ env.REGEX_FEATURE_BRANCH }}
+        echo "${{ env.REGEX_FEATURE_BRANCH }}"
 
-        if [[ "$BRANCH_LOWER" =~ ${{ env.REGEX_FEATURE_BRANCH }} ]] ; then
+        if [[ "$BRANCH_LOWER" =~ "${{ env.REGEX_FEATURE_BRANCH }}" ]] ; then
           export NAMESPACE+="-ft-$FEAT_NAME"
           echo "Feature"
-        elif [[ "$BRANCH_LOWER" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
+        elif [[ "$BRANCH_LOWER" =~ "${{ env.REGEX_HOTFIX_BRANCH }}" ]] ; then
           export NAMESPACE+="-hot-$FEAT_NAME"
           echo "Hot"
         else
