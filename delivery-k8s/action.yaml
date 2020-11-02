@@ -112,6 +112,7 @@ runs:
       run: |-
         BRANCH_LOWER="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
 
+        echo "BRANCH_LOWER: "$BRANCH_LOWER
         BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 1)
         FEAT_FULL_NAME="$(printf "%s" "${BRANCH_LOWER##*/}" )"
         FEAT_NAME="${FEAT_FULL_NAME:0:30}"
@@ -125,7 +126,6 @@ runs:
         elif [[ "$BRANCH_TYPE" =~ "${{ env.REGEX_HOTFIX_BRANCH }}" ]] ; then
           export NAMESPACE+="-hot-$FEAT_NAME"
           echo "Hot"
-        else
         else
           export NAMESPACE+="-$FEAT_NAME"
           echo "default"
