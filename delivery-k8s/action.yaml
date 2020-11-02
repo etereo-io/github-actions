@@ -110,10 +110,11 @@ runs:
     - name: Syncronize helm releases using helmfile and replacing docker image digest
       shell: bash
       run: |-
-        BRANCH_LOWER="$(echo "$GITHUB_REF" | cut -d'refs/heads/' -f 2 | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+        BRANCH_LOWER="$(echo "$GITHUB_REF" tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
 
         echo "BRANCH_LOWER: "$BRANCH_LOWER
-        BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 1)
+
+        BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 2)
         FEAT_FULL_NAME="$(printf "%s" "${BRANCH_LOWER##*/}" )"
         FEAT_NAME="${FEAT_FULL_NAME:0:30}"
         NAMESPACE=${{ inputs.namespacePrefix }}
