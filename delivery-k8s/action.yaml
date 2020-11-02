@@ -118,16 +118,20 @@ runs:
 
         echo "${{ env.REGEX_FEATURE_BRANCH }}"
 
-        if [[ "$BRANCH_LOWER" =~ '${{ env.REGEX_FEATURE_BRANCH }}' ]] ; then
+        if [[ "$BRANCH_LOWER" =~ "${{ env.REGEX_FEATURE_BRANCH }}" ]] ; then
           export NAMESPACE+="-ft-$FEAT_NAME"
           echo "Feature"
-        elif [[ "$BRANCH_LOWER" =~ '${{ env.REGEX_HOTFIX_BRANCH }}' ]] ; then
-          export NAMESPACE+="-hot-$FEAT_NAME"
-          echo "Hot"
         else
           export NAMESPACE+="-$FEAT_NAME"
           echo "default"
         fi
+        # elif [[ "$BRANCH_LOWER" =~ "${{ env.REGEX_HOTFIX_BRANCH }}" ]] ; then
+        #   export NAMESPACE+="-hot-$FEAT_NAME"
+        #   echo "Hot"
+        # else
+        #   export NAMESPACE+="-$FEAT_NAME"
+        #   echo "default"
+        # fi
 
         HELM_EXTRA_ARGS=""
 
