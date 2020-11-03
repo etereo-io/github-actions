@@ -113,20 +113,21 @@ runs:
         BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 3)
         FEAT_FULL_NAME="$(printf "%s" "${BRANCH_LOWER##*/}" )"
         FEAT_NAME="${FEAT_FULL_NAME:0:30}"
-        NAMESPACE=${{ inputs.namespacePrefix }}
+        REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -'/' -f 2)
 
+        echo "REPO_NAME: $REPO_NAME"
         echo "BRANCH_TYPE: $BRANCH_TYPE"
         echo "${{ env.REGEX_FEATURE_BRANCH }}"
 
-        if [[ "$BRANCH_TYPE" =~ "${{ env.REGEX_FEATURE_BRANCH }}" ]] ; then
-          export NAMESPACE+="-ft-$FEAT_NAME"
+        if [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_FEATURE_BRANCH }} ]] ; then
+          export NAMESPACE=$REPO_NAME"-ft-"$BRANCH_SHORT
           echo "Feature"
-        elif [[ "$BRANCH_TYPE" =~ "${{ env.REGEX_HOTFIX_BRANCH }}" ]] ; then
-          export NAMESPACE+="-hot-$FEAT_NAME"
-          echo "Hot"
+        elif [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
+          export NAMESPACE=$REPO_NAME"-hot-"$BRANCH_SHORT
+          echo "Hotfix"
         else
-          export NAMESPACE+="-$FEAT_NAME"
-          echo "default"
+          export NAMESPACE=${{ inputs.namespacePrefix }}"-dev"
+          echo "default branch"
         fi
 
         HELM_EXTRA_ARGS=""
