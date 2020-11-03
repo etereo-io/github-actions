@@ -39,6 +39,6 @@ runs:
         IMAGE_URL=${{ inputs.dockerImageUrl }}:${{ inputs.dockerImageTag }}
         docker tag ${{ inputs.dockerImageUrl }} $IMAGE_URL
         docker push $IMAGE_URL
-        DOCKER_IMAGE_SHA=$(docker images --no-trunc --quiet $IMAGE_URL)
+        DOCKER_IMAGE_SHA=$(docker inspect --format='{{ (index .RepoDigests 0) }}' eu.gcr.io/billin-dev/gofre@sha256:1719ab72411abecc1ff1eb2574745ef75b0ae3b1e9d001400ae68e2c57f1ee10 | cut -d'@' -f 2)
         echo "Exporting digest: "$DOCKER_IMAGE_SHA
         echo "::set-output name=docker_image_sha::$DOCKER_IMAGE_SHA"
