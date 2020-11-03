@@ -111,7 +111,6 @@ runs:
         FEAT_NAME="${FEAT_FULL_NAME:0:30}"
         NAMESPACE=${{ inputs.namespacePrefix }}
 
-        echo "REPO_NAME: $REPO_NAME"
         echo "BRANCH_TYPE: $BRANCH_TYPE"
         echo "${{ env.REGEX_FEATURE_BRANCH }}"
 
