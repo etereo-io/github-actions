@@ -51,10 +51,6 @@ inputs:
     description: 'Yaml path in dot notation to Docker image digest value that needs to be replaced'
     required: false
     default: 'base.deployment.image.digest'
-  dynamicNamespace:
-    description: 'Forces deployment to a dynamic environment. The k8s namespace name comes from the github branch name that triggers the event'
-    required: false
-    default: false
 runs:
   using: "composite"
   steps:
@@ -113,20 +109,20 @@ runs:
         BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 3)
         FEAT_FULL_NAME="$(printf "%s" "${BRANCH_LOWER##*/}" )"
         FEAT_NAME="${FEAT_FULL_NAME:0:30}"
-        REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -'/' -f 2)
+        NAMESPACE=${{ inputs.namespacePrefix }}
 
         echo "REPO_NAME: $REPO_NAME"
         echo "BRANCH_TYPE: $BRANCH_TYPE"
         echo "${{ env.REGEX_FEATURE_BRANCH }}"
 
         if [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_FEATURE_BRANCH }} ]] ; then
-          export NAMESPACE=$REPO_NAME"-ft-"$BRANCH_SHORT
+          export NAMESPACE+="-ft-"$BRANCH_SHORT
           echo "Feature"
         elif [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
-          export NAMESPACE=$REPO_NAME"-hot-"$BRANCH_SHORT
+          export NAMESPACE+="-hot-"$BRANCH_SHORT
           echo "Hotfix"
         else
-          export NAMESPACE=${{ inputs.namespacePrefix }}"-dev"
+          export NAMESPACE+="-${{ inputs.enviroment }}"
           echo "default branch"
         fi
 
