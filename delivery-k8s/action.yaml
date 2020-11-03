@@ -116,10 +116,10 @@ runs:
         echo "${{ env.REGEX_FEATURE_BRANCH }}"
 
         if [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_FEATURE_BRANCH }} ]] ; then
-          export NAMESPACE+="-ft-"$BRANCH_SHORT
+          export NAMESPACE+="-ft-"$FEAT_NAME
           echo "Feature"
         elif [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
-          export NAMESPACE+="-hot-"$BRANCH_SHORT
+          export NAMESPACE+="-hot-"$FEAT_NAME
           echo "Hotfix"
         else
           export NAMESPACE+="-${{ inputs.enviroment }}"
