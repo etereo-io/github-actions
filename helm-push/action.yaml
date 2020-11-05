@@ -61,7 +61,7 @@ runs:
         chmod +x ./yq
     - name: Decrypt enc. helmfile using sops
       shell: bash
-      run: sops -d ${{ inputs.helmRepoFilePath }} > ${{ inputs.helmRepoFilePath }}.dec
+      run: ./sops -d ${{ inputs.helmRepoFilePath }} > ./helm.repositories.dec.yaml
     - name: Add helm repositories
       shell: bash
       run: |-
