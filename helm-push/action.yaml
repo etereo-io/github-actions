@@ -85,10 +85,10 @@ runs:
       run: helm plugin install https://github.com/chartmuseum/helm-push.git
     - name: Override docker image tag to be used
       shell: bash
-      run: yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageTagKeyPath}} "${{ inputs.dockerImageTag }}"
+      run: ./yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageTagKeyPath}} "${{ inputs.dockerImageTag }}"
     - name: Override docker image digest to be used
       shell: bash
-      run: yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageDigestKeyPath}} "${{ inputs.dockerImageDigest }}"
+      run: ./yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageDigestKeyPath}} "${{ inputs.dockerImageDigest }}"
     - name: Publish helm chart to chartmuseum
       shell: bash
       run: helm push ${{ inputs.helmChartPath }} ${{ inputs.chartMuseumRepoName }} --version=${{ inputs.helmChartPackageVersion }}
