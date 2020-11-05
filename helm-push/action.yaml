@@ -52,21 +52,28 @@ runs:
       run: |-
         curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -p /usr/local/bin/sops
         chmod +x /usr/local/bin/sops
+    - name: Download yq binary for parse helm repos file
+      shell: bash
+      run: |-
+        curl -L https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 -O
+        mv yq_linux_amd64 yq
+        chmod +x ./yq
     - name: Decrypt enc. helmfile using sops
       shell: bash
       run: sops -d ${{ inputs.helmRepoFilePath }} > ${{ inputs.helmRepoFilePath }}.dec
     - name: Add helm repositories
       shell: bash
       run: |-
+        echo "Adding helm repositories.."
         counter=0
-        REPO_FILE="${{ inputs.helmRepoFilePath }}.dec"
+        REPO_FILE="$(mktemp --suffix .json)"
+        ./yq r "./helm.repositories.dec.yaml" -j > "$REPO_FILE"
         for repo in $(jq -r '.repositories[].name' "$REPO_FILE") ; do
-          echo "Adding helm repo: $repo"
           HELM_LOCAL_USER="$(jq -r ".repositories[$counter].username | select (.!=null)" "$REPO_FILE")"
           HELM_LOCAL_PASS="$(jq -r ".repositories[$counter].password | select (.!=null)" "$REPO_FILE")"
           HELM_LOCAL_URL="$(jq -r ".repositories[$counter].url | select (.!=null)" "$REPO_FILE")"
           if [ -n  "$HELM_LOCAL_USER" ] ; then
-            helm repo add $repo $HELM_LOCAL_URL --username \"$HELM_LOCAL_USER\" --password \"$HELM_LOCAL_PASS\"
+            helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS
           else
             helm repo add $repo $HELM_LOCAL_URL
           fi
@@ -83,4 +90,4 @@ runs:
       run: yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageDigestKeyPath}} "${{ inputs.dockerImageDigest }}"
     - name: Publish helm chart to chartmuseum
       shell: bash
-      run: helm push ${{ inputs.helmChartPath } ${{ inputs.chartMuseumRepoName }} --version=$GITHUB_REF
+      run: helm push ${{ inputs.helmChartPath }} ${{ inputs.chartMuseumRepoName }} --version=${{ inputs.helmChartPackageVersion }}
