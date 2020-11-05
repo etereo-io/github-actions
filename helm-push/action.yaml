@@ -50,8 +50,9 @@ runs:
     - name: Download sops binary for decrypting enc. helm repository file
       shell: bash
       run: |-
-        curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -p /usr/local/bin/sops
-        chmod +x /usr/local/bin/sops
+        curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -O
+        mv sops-v3.6.1.linux sops
+        chmod +x sops
     - name: Download yq binary for parse helm repos file
       shell: bash
       run: |-
