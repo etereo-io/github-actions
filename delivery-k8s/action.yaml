@@ -51,6 +51,10 @@ inputs:
     description: 'Yaml path in dot notation to Docker image digest value that needs to be replaced'
     required: false
     default: 'base.deployment.image.digest'
+outputs:
+  namespace: # id of the output
+    description: 'The kubernetes namespace where the application is deployed to'
+    value: ""
 runs:
   using: "composite"
   steps:
@@ -133,3 +137,4 @@ runs:
         fi
 
         ./helmfile --file ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} sync $HELM_EXTRA_ARGS
+        echo "::set-output name=namespace::$NAMESPACE"
