@@ -99,6 +99,6 @@ runs:
     - name: Publish helm chart to chartmuseum
       shell: bash
       run: |-
-        CHART_NAME=$(yq r ${{ inputs.helmChartPath }}/Chart.yaml 'name')
+        CHART_NAME=$(./yq r ${{ inputs.helmChartPath }}/Chart.yaml 'name')
         echo "CHARTNAME "$CHART_NAME
         helm push $CHART_NAME-${{ inputs.helmChartPackageVersion }}.tgz ${{ inputs.chartMuseumRepoName }} --version=${{ inputs.helmChartPackageVersion }}
