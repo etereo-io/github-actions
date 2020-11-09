@@ -92,3 +92,11 @@ runs:
     - name: Publish helm chart to chartmuseum
       shell: bash
       run: helm push ${{ inputs.helmChartPath }} ${{ inputs.chartMuseumRepoName }} --version=${{ inputs.helmChartPackageVersion }} --dependency-update
+    - name: Package helm chart
+      shell: bash
+      run: helm package ${{ inputs.helmChartPath }} --version=${{ inputs.helmChartPackageVersion }} --dependency-update
+    - name: Publish helm chart to chartmuseum
+      shell: bash
+      run: |-
+      CHART_NAME=$(yq r ${{ inputs.helmChartPath }}/Chart.yaml 'name')
+      helm push $CHART_NAME-${{ inputs.helmChartPackageVersion }}.tgz ${{ inputs.chartMuseumRepoName }} --version=${{ inputs.helmChartPackageVersion }}
