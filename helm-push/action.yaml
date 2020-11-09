@@ -92,6 +92,10 @@ runs:
     - name: Publish helm chart to chartmuseum
       shell: bash
       run: helm push ${{ inputs.helmChartPath }} ${{ inputs.chartMuseumRepoName }} --version=${{ inputs.helmChartPackageVersion }} --dependency-update
+    - name: List helm repositories
+      shell: bash
+      run: |
+        helm repo list
     - name: Package helm chart
       shell: bash
       run: helm package ${{ inputs.helmChartPath }} --version=${{ inputs.helmChartPackageVersion }} --dependency-update
