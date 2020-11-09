@@ -91,4 +91,4 @@ runs:
       run: ./yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageDigestKeyPath}} "${{ inputs.dockerImageDigest }}"
     - name: Publish helm chart to chartmuseum
       shell: bash
-      run: helm push ${{ inputs.helmChartPath }} ${{ inputs.chartMuseumRepoName }} --version=${{ inputs.helmChartPackageVersion }}
+      run: helm push ${{ inputs.helmChartPath }} ${{ inputs.chartMuseumRepoName }} --version=${{ inputs.helmChartPackageVersion }} --dependency-update
