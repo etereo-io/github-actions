@@ -33,7 +33,7 @@ runs:
     - name: Delete specific environment
       shell: bash
       run: |-
-        BRANCH_LOWER="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+        BRANCH_LOWER="$(echo ${{ github.event.ref }} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
 
         BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 3)
         FEAT_FULL_NAME="$(printf "%s" "${BRANCH_LOWER##*/}" )"
