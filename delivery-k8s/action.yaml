@@ -54,10 +54,10 @@ inputs:
 outputs:
   namespace: # id of the output
     description: 'The kubernetes namespace where the application is deployed to'
-    value: ""
+    value: "${{ steps.deploy.outputs.namespace }}"
   branch_short: # id of the output
     description: 'The name of the kubernetes branch (eg: ft-some-name)'
-    value: ""
+    value: "${{ steps.deploy.outputs.branch_short }}"
 runs:
   using: "composite"
   steps:
@@ -110,6 +110,7 @@ runs:
       run: helm plugin install https://github.com/zendesk/helm-secrets
     - name: Syncronize helm releases using helmfile and replacing docker image digest
       shell: bash
+      id: deploy
       run: |-
         BRANCH_LOWER="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
 
