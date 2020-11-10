@@ -45,13 +45,12 @@ runs:
 
         if [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_FEATURE_BRANCH }} ]] ; then
           export NAMESPACE+="-ft-"$FEAT_NAME
+          export BRANCH_SHORT="ft-"$FEAT_NAME
           echo "Feature"
+          kubectl delete namespace $NAMESPACE
         elif [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
           export NAMESPACE+="-hot-"$FEAT_NAME
+          export BRANCH_SHORT="hot-"$FEAT_NAME
           echo "Hotfix"
-        else
-          export NAMESPACE+="-${{ inputs.enviroment }}"
-          echo "default branch"
+          kubectl delete namespace $NAMESPACE
         fi
-
-        kubectl delete namespace $NAMESPACE
