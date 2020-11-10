@@ -89,10 +89,6 @@ runs:
     - name: Override docker image digest to be used
       shell: bash
       run: ./yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageDigestKeyPath}} "${{ inputs.dockerImageDigest }}"
-    - name: List helm repositories
-      shell: bash
-      run: |
-        helm repo list
     - name: Package helm chart
       shell: bash
       run: helm package ${{ inputs.helmChartPath }} --version=${{ inputs.helmChartPackageVersion }} --dependency-update
@@ -100,5 +96,4 @@ runs:
       shell: bash
       run: |-
         CHART_NAME=$(./yq r ${{ inputs.helmChartPath }}/Chart.yaml 'name')
-        echo "CHARTNAME "$CHART_NAME
         helm push $CHART_NAME-${{ inputs.helmChartPackageVersion }}.tgz ${{ inputs.chartMuseumRepoName }} --version=${{ inputs.helmChartPackageVersion }}
