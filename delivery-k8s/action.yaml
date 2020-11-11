@@ -44,13 +44,21 @@ inputs:
     required: false
     default: 'v0.132.0'
   dockerImageDigest:
-    description: 'Docker image tag to be placed in the helm chart values. Require replaceDockerImage attr set to true'
+    description: 'Docker image digest to be placed in the helm chart values. Require replaceDockerImage attr set to true'
     required: false
     default: ''
   dockerImageDigestKeyPath:
     description: 'Yaml path in dot notation to Docker image digest value that needs to be replaced'
     required: false
     default: 'base.deployment.image.digest'
+  dockerImageTag:
+    description: 'Docker image tag to be placed in the helm chart values. Require replaceDockerImage attr set to true'
+    required: false
+    default: ''
+  dockerImageTagKeyPath:
+    description: 'Yaml path in dot notation to Docker image tag value that needs to be replaced'
+    required: false
+    default: 'base.deployment.image.tag'
 outputs:
   namespace: # id of the output
     description: 'The kubernetes namespace where the application is deployed to'
@@ -140,7 +148,12 @@ runs:
 
         if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
           echo "Replace docker image sha digest of the helm release"
-          HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
+          HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }} "
+        fi
+
+        if [ "${{ inputs.dockerImageTag}}" != "" ]; then
+          echo "Replace docker image tag of the helm release"
+          HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageTagKeyPath }}=${{ inputs.dockerImageTag }} "
         fi
 
         echo "BRANCH_SHORT "$BRANCH_SHORT
