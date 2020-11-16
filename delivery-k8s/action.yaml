@@ -126,6 +126,7 @@ runs:
         FEAT_FULL_NAME="$(printf "%s" "${BRANCH_LOWER##*/}" )"
         FEAT_NAME="${FEAT_FULL_NAME:0:30}"
         NAMESPACE=${{ inputs.namespacePrefix }}
+        ENVIRONMENT=""
 
         echo "BRANCH_TYPE: $BRANCH_TYPE"
         echo "${{ env.REGEX_FEATURE_BRANCH }}"
@@ -133,14 +134,17 @@ runs:
         if [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_FEATURE_BRANCH }} ]] ; then
           export NAMESPACE+="-ft-"$FEAT_NAME
           export BRANCH_SHORT="ft-"$FEAT_NAME
+          export ENVIRONMENT="feat"
           echo "Feature"
         elif [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
           export NAMESPACE+="-hot-"$FEAT_NAME
           export BRANCH_SHORT="hot-"$FEAT_NAME
+          export ENVIRONMENT="feat"
           echo "Hotfix"
         else
           export NAMESPACE+="-${{ inputs.enviroment }}"
           export BRANCH_SHORT="${{ inputs.enviroment }}"
+          export ENVIRONMENT="dev"
           echo "default branch"
         fi
 
@@ -160,4 +164,4 @@ runs:
         echo "::set-output name=namespace::$NAMESPACE"
         echo "::set-output name=branch_short::$BRANCH_SHORT"
 
-        ./helmfile --file ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} sync $HELM_EXTRA_ARGS
+        ./helmfile --file ${{ inputs.baseDeployDir }}/$ENVIRONMENT/${{ inputs.helmfileName }} sync $HELM_EXTRA_ARGS
