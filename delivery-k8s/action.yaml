@@ -63,6 +63,14 @@ inputs:
     description: 'Yaml path in dot notation to Docker image tag value that needs to be replaced'
     required: false
     default: 'base.deployment.image.tag'
+  dockerImageTagEnv:
+    description: 'Exported docker image tag as environment variable to be used in helmfile values instead of set'
+    required: false
+    default: ''
+  dockerImageTagEnvName:
+    description: 'Name of the environment variable to be used as tag'
+    required: false
+    default: 'DOCKER_IMAGE_TAG'
 outputs:
   namespace: # id of the output
     description: 'The kubernetes namespace where the application is deployed to'
@@ -167,5 +175,10 @@ runs:
         echo "BRANCH_SHORT "$BRANCH_SHORT
         echo "::set-output name=namespace::$NAMESPACE"
         echo "::set-output name=branch_short::$BRANCH_SHORT"
+
+        if [ "${{ inputs.dockerImageTagEnv}}" != "" ]; then
+          echo "Export docker image tag as ${{inputs.dockerImageTagEnvName}}=${{inputs.dockerImageTagEnv}}"
+          export ${{inputs.dockerImageTagEnvName}}=${{inputs.dockerImageTagEnv}}
+        fi
 
         ./helmfile --file ${{ inputs.baseDeployDir }}/$ENVIRONMENT/${{ inputs.helmfileName }} sync $HELM_EXTRA_ARGS
