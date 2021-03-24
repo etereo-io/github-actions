@@ -17,6 +17,14 @@ inputs:
     default: 'deploy'
   environment:
     description: 'Environment where to deploy the application. Must match with a the folder name inside "baseDeployDir". Inside the folder path a helmfile inside have to be placed'
+    required: false
+    default: ''
+  appPrefix:
+    description: 'Prefix of application namespace deployed in to the cluster'
+    required: true
+    default: ''
+  projectPrefix:
+    description: 'Prefix of project namespace deployed in to the cluster'
     required: true
     default: ''
   gcpProjectId:
@@ -40,17 +48,36 @@ inputs:
     required: false
     default: 'v0.132.0'
   dockerImageDigest:
-    description: 'Docker image tag to be placed in the helm chart values. Require replaceDockerImage attr set to true'
+    description: 'Docker image digest to be placed in the helm chart values. Require replaceDockerImage attr set to true'
     required: false
     default: ''
   dockerImageDigestKeyPath:
     description: 'Yaml path in dot notation to Docker image digest value that needs to be replaced'
     required: false
     default: 'base.deployment.image.digest'
-  dynamicNamespace:
-    description: 'Forces deployment to a dynamic environment. The k8s namespace name comes from the github branch name that triggers the event'
+  dockerImageTag:
+    description: 'Docker image tag to be placed in the helm chart values. Require replaceDockerImage attr set to true'
     required: false
-    default: false
+    default: ''
+  dockerImageTagKeyPath:
+    description: 'Yaml path in dot notation to Docker image tag value that needs to be replaced'
+    required: false
+    default: 'base.deployment.image.tag'
+  dockerImageTagEnv:
+    description: 'Exported docker image tag as environment variable to be used in helmfile values instead of set'
+    required: false
+    default: ''
+  dockerImageTagEnvName:
+    description: 'Name of the environment variable to be used as tag'
+    required: false
+    default: 'DOCKER_IMAGE_TAG'
+outputs:
+  namespace: # id of the output
+    description: 'The kubernetes namespace where the application is deployed to'
+    value: "${{ steps.deploy.outputs.namespace }}"
+  branch_short: # id of the output
+    description: 'The name of the kubernetes branch (eg: ft-some-name)'
+    value: "${{ steps.deploy.outputs.branch_short }}"
 runs:
   using: "composite"
   steps:
@@ -60,24 +87,33 @@ runs:
         curl -L https://github.com/mozilla/sops/releases/download/v3.6.1/sops-v3.6.1.linux -O
         mv sops-v3.6.1.linux sops
         chmod +x sops
+    - name: Download yq binary for parse helm repos file
+      shell: bash
+      run: |-
+        curl -L https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 -O
+        mv yq_linux_amd64 yq
+        chmod +x ./yq
     - name: Decrypt helm repositories file using sops
       shell: bash
-      run: sops -d ${{ inputs.helmRepoFilePath }} > ${{ inputs.helmRepoFilePath }}.dec
+      run: |-
+        ./sops -d ${{ inputs.helmRepoFilePath }} > ./helm.repositories.dec.yaml
     - name: Get gke cluster credentials
       shell: bash
-      run: gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
+      run: |-
+        gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
     - name: Add helm repositories
       shell: bash
       run: |-
+        echo "Adding helm repositories.."
         counter=0
-        REPO_FILE="${{ inputs.helmRepoFilePath }}.dec"
+        REPO_FILE="$(mktemp --suffix .json)"
+        ./yq r "./helm.repositories.dec.yaml" -j > "$REPO_FILE"
         for repo in $(jq -r '.repositories[].name' "$REPO_FILE") ; do
-          echo "Adding helm repo: $repo"
           HELM_LOCAL_USER="$(jq -r ".repositories[$counter].username | select (.!=null)" "$REPO_FILE")"
           HELM_LOCAL_PASS="$(jq -r ".repositories[$counter].password | select (.!=null)" "$REPO_FILE")"
           HELM_LOCAL_URL="$(jq -r ".repositories[$counter].url | select (.!=null)" "$REPO_FILE")"
           if [ -n  "$HELM_LOCAL_USER" ] ; then
-            helm repo add $repo $HELM_LOCAL_URL --username \"$HELM_LOCAL_USER\" --password \"$HELM_LOCAL_PASS\"
+            helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS
           else
             helm repo add $repo $HELM_LOCAL_URL
           fi
@@ -86,20 +122,63 @@ runs:
     - name: Download helmfile binary
       shell: bash
       run: |-
-        curl -L https://github.com/roboll/helmfile/releases/download/${{ inputs.helmfileVersion }}/helmfile_linux_amd64 -o /usr/local/bin/helmfile
-        chmod +x /usr/local/bin/helmfile
+        curl -L https://github.com/roboll/helmfile/releases/download/${{ inputs.helmfileVersion }}/helmfile_linux_amd64 -O
+        mv helmfile_linux_amd64 helmfile
+        chmod +x ./helmfile
     - name: Install helm-secrets helm plugin
       shell: bash
       run: helm plugin install https://github.com/zendesk/helm-secrets
     - name: Syncronize helm releases using helmfile and replacing docker image digest
       shell: bash
+      id: deploy
       run: |-
-        HELM_EXTRA_ARGS=""
+        BRANCH_LOWER="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
 
-        NAMESPACE="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+        BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 3)
+        FEAT_FULL_NAME="$(printf "%s" "${BRANCH_LOWER##*/}" )"
+        FEAT_NAME="${FEAT_FULL_NAME:0:30}"
+        NAMESPACE=""
+        ENVIRONMENT=""
 
-        if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
-          HELM_EXTRA_ARGS+="--state-values-set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }}"
+        echo "BRANCH_TYPE: $BRANCH_TYPE"
+        echo "${{ env.REGEX_FEATURE_BRANCH }}"
+
+        if [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_FEATURE_BRANCH }} ]] ; then
+          export NAMESPACE="${{ inputs.appPrefix }}-ft-$FEAT_NAME"
+          export BRANCH_SHORT="ft-"$FEAT_NAME
+          export ENVIRONMENT="feat"
+          echo "Feature"
+        elif [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
+          export NAMESPACE="${{ inputs.appPrefix }}-hot-$FEAT_NAME"
+          export BRANCH_SHORT="hot-"$FEAT_NAME
+          export ENVIRONMENT="feat"
+          echo "Hotfix"
+        else
+          export NAMESPACE="${{ inputs.proyectPrefix }}-${{ inputs.enviroment }}"
+          export BRANCH_SHORT="${{ inputs.enviroment }}"
+          export ENVIRONMENT="dev"
+          echo "default branch"
         fi
 
-        helmfile sync -f ${{ inputs.baseDeployDir }}/${{ inputs.environment }}/${{ inputs.helmfileName }} $HELM_EXTRA_ARGS
+        HELM_EXTRA_ARGS=""
+
+        if [ "${{ inputs.dockerImageDigest}}" != "" ]; then
+          echo "Replace docker image sha digest of the helm release"
+          HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageDigestKeyPath }}=${{ inputs.dockerImageDigest }} "
+        fi
+
+        if [ "${{ inputs.dockerImageTag}}" != "" ]; then
+          echo "Replace docker image tag of the helm release"
+          HELM_EXTRA_ARGS+="--set ${{ inputs.dockerImageTagKeyPath }}=${{ inputs.dockerImageTag }} "
+        fi
+
+        echo "BRANCH_SHORT "$BRANCH_SHORT
+        echo "::set-output name=namespace::$NAMESPACE"
+        echo "::set-output name=branch_short::$BRANCH_SHORT"
+
+        if [ "${{ inputs.dockerImageTagEnv}}" != "" ]; then
+          echo "Export docker image tag as ${{inputs.dockerImageTagEnvName}}=${{inputs.dockerImageTagEnv}}"
+          export ${{inputs.dockerImageTagEnvName}}=${{inputs.dockerImageTagEnv}}
+        fi
+
+        ./helmfile --file ${{ inputs.baseDeployDir }}/$ENVIRONMENT/${{ inputs.helmfileName }} sync $HELM_EXTRA_ARGS

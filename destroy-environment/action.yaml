@@ -1,0 +1,56 @@
+name: Destroy specific environment
+author: etereoio
+description: |-
+  Action to destroy a kubernetes environmnet. Useful to recycle dynamic environments.
+inputs:
+  namespacePrefix:
+    description: 'Prefix of any namespace deployed in to the cluster'
+    required: true
+    default: ''
+  gcpProjectId:
+    description: 'Project id where the kubernetes cluster is located'
+    required: true
+    default: ''
+  gcpServiceAccountKey:
+    description: 'Gcp service account key to use for authentication agains gcp'
+    required: true
+    default: ''
+  gkeClusterName:
+    description: 'GKE k8s cluster name'
+    required: true
+    default: ''
+  gcpClusterZone:
+    description: 'Gcp zone where the cluster is located'
+    required: true
+    default: ''
+runs:
+  using: "composite"
+  steps:
+    - name: Get gke cluster credentials
+      shell: bash
+      run: |-
+        gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
+    - name: Delete specific environment
+      shell: bash
+      run: |-
+        BRANCH_LOWER="$(echo ${{ github.event.ref }} | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+        echo "Affected branch: "${{ github.event.ref }}
+        BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 1)
+        FEAT_FULL_NAME="$(printf "%s" "${BRANCH_LOWER##*/}" )"
+        FEAT_NAME="${FEAT_FULL_NAME:0:30}"
+        NAMESPACE=${{ inputs.namespacePrefix }}
+
+        if [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_FEATURE_BRANCH }} ]] ; then
+          export NAMESPACE+="-ft-"$FEAT_NAME
+          export BRANCH_SHORT="ft-"$FEAT_NAME
+          echo "Deleting namespace $NAMESPACE for feature branch $BRANCH_LOWER"
+          kubectl delete namespace $NAMESPACE
+        elif [[ "$BRANCH_TYPE" =~ ${{ env.REGEX_HOTFIX_BRANCH }} ]] ; then
+          export NAMESPACE+="-hot-"$FEAT_NAME
+          export BRANCH_SHORT="hot-"$FEAT_NAME
+          echo "Deleting namespace $NAMESPACE for hotfix branch $BRANCH_LOWER"
+          kubectl delete namespace $NAMESPACE
+        else
+          echo "Error branch type do not match"
+          exit 1;
+        fi

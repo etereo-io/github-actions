@@ -26,16 +26,19 @@ inputs:
 outputs:
   docker_image_sha: # id of the output
     description: 'The sha 256 of the published docker image'
+    value: ${{ steps.build-docker.outputs.docker_image_sha }}
 runs:
   using: "composite"
   steps:
     - name: Build and push docker image
       shell: bash
+      id: build-docker
       run: |-
         gcloud auth configure-docker
         docker build . -f ${{ inputs.dockerfilePath }} -t ${{ inputs.dockerImageUrl }}
         IMAGE_URL=${{ inputs.dockerImageUrl }}:${{ inputs.dockerImageTag }}
         docker tag ${{ inputs.dockerImageUrl }} $IMAGE_URL
         docker push $IMAGE_URL
-        DOCKER_IMAGE_SHA=$(docker images --no-trunc --quiet $IMAGE_URL)
+        DOCKER_IMAGE_SHA=$(docker inspect --format='{{ (index .RepoDigests 0) }}' $IMAGE_URL | cut -d'@' -f 2)
+        echo "Exporting digest: "$DOCKER_IMAGE_SHA
         echo "::set-output name=docker_image_sha::$DOCKER_IMAGE_SHA"
