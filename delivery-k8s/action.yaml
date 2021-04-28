@@ -139,7 +139,7 @@ runs:
         if [ "${{ inputs.deployFromPR }}" != ""]; then
           BRANCH_LOWER="$(echo "$GITHUB_HEAD_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
           BRANCH_TYPE=$BRANCH_LOWER
-        elif
+        else
           BRANCH_LOWER="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
           BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 3)
         fi
