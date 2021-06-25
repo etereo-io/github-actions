@@ -128,7 +128,7 @@ runs:
     - name: Install helm-secrets helm plugin
       shell: bash
       run: helm plugin install https://github.com/zendesk/helm-secrets
-    - name: Syncronize helm releases using helmfile and replacing docker image digest --pass-credentials
+    - name: Syncronize helm releases using helmfile and replacing docker image digest
       shell: bash
       id: deploy
       run: |-
