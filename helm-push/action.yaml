@@ -80,6 +80,9 @@ runs:
           fi
           ((counter=counter+1))
         done
+    - name: Helm repo update
+      shell: bash
+      run: helm repo update
     - name: Install helm-push helm plugin
       shell: bash
       run: helm plugin install https://github.com/chartmuseum/helm-push.git
