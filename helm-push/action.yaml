@@ -64,7 +64,7 @@ runs:
       run: ./sops -d ${{ inputs.helmRepoFilePath }} > ./helm.repositories.dec.yaml
     - name: Add helm repositories
       shell: bash
-      run: |-
+      run: |- # helm 3.6.1 require helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS --pass-credentials
         echo "Adding helm repositories.."
         counter=0
         REPO_FILE="$(mktemp --suffix .json)"
@@ -74,7 +74,7 @@ runs:
           HELM_LOCAL_PASS="$(jq -r ".repositories[$counter].password | select (.!=null)" "$REPO_FILE")"
           HELM_LOCAL_URL="$(jq -r ".repositories[$counter].url | select (.!=null)" "$REPO_FILE")"
           if [ -n  "$HELM_LOCAL_USER" ] ; then
-            helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS --pass-credentials
+            helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS
           else
             helm repo add $repo $HELM_LOCAL_URL
           fi
