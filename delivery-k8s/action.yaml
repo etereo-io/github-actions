@@ -4,79 +4,79 @@ description: |-
   Deploy your applications to kubernetes using helm
 inputs:
   helmRepoFilePath:
-    description: 'Path to the encrypted helm repos file'
+    description: "Path to the encrypted helm repos file"
     required: false
-    default: 'helm.repositories.yaml'
+    default: "helm.repositories.yaml"
   helmfileName:
-    description: 'Name of the helmfile config'
+    description: "Name of the helmfile config"
     required: false
-    default: 'helmfile.yaml'
+    default: "helmfile.yaml"
   baseDeployDir:
-    description: 'Directory where different deployment enviroment folders are placed'
+    description: "Directory where different deployment enviroment folders are placed"
     required: false
-    default: 'deploy'
+    default: "deploy"
   environment:
     description: 'Environment where to deploy the application. Must match with a the folder name inside "baseDeployDir". Inside the folder path a helmfile inside have to be placed'
     required: false
-    default: ''
+    default: ""
   appPrefix:
-    description: 'Prefix of application namespace deployed in to the cluster'
+    description: "Prefix of application namespace deployed in to the cluster"
     required: true
-    default: ''
+    default: ""
   projectPrefix:
-    description: 'Prefix of project namespace deployed in to the cluster'
+    description: "Prefix of project namespace deployed in to the cluster"
     required: true
-    default: ''
+    default: ""
   gcpProjectId:
-    description: 'Project id where the kubernetes cluster is located'
+    description: "Project id where the kubernetes cluster is located"
     required: true
-    default: ''
+    default: ""
   gcpServiceAccountKey:
-    description: 'Gcp service account key to use for authentication agains gcp'
+    description: "Gcp service account key to use for authentication agains gcp"
     required: true
-    default: ''
+    default: ""
   gkeClusterName:
-    description: 'GKE k8s cluster name'
+    description: "GKE k8s cluster name"
     required: true
-    default: ''
+    default: ""
   gcpClusterZone:
-    description: 'Gcp zone where the cluster is located'
+    description: "Gcp zone where the cluster is located"
     required: true
-    default: ''
+    default: ""
   helmfileVersion:
-    description: 'Version of helmfile'
+    description: "Version of helmfile"
     required: false
-    default: 'v0.132.0'
+    default: "v0.132.0"
   dockerImageDigest:
-    description: 'Docker image digest to be placed in the helm chart values. Require replaceDockerImage attr set to true'
+    description: "Docker image digest to be placed in the helm chart values. Require replaceDockerImage attr set to true"
     required: false
-    default: ''
+    default: ""
   dockerImageDigestKeyPath:
-    description: 'Yaml path in dot notation to Docker image digest value that needs to be replaced'
+    description: "Yaml path in dot notation to Docker image digest value that needs to be replaced"
     required: false
-    default: 'base.deployment.image.digest'
+    default: "base.deployment.image.digest"
   dockerImageTag:
-    description: 'Docker image tag to be placed in the helm chart values. Require replaceDockerImage attr set to true'
+    description: "Docker image tag to be placed in the helm chart values. Require replaceDockerImage attr set to true"
     required: false
-    default: ''
+    default: ""
   dockerImageTagKeyPath:
-    description: 'Yaml path in dot notation to Docker image tag value that needs to be replaced'
+    description: "Yaml path in dot notation to Docker image tag value that needs to be replaced"
     required: false
-    default: 'base.deployment.image.tag'
+    default: "base.deployment.image.tag"
   dockerImageTagEnv:
-    description: 'Exported docker image tag as environment variable to be used in helmfile values instead of set'
+    description: "Exported docker image tag as environment variable to be used in helmfile values instead of set"
     required: false
-    default: ''
+    default: ""
   dockerImageTagEnvName:
-    description: 'Name of the environment variable to be used as tag'
+    description: "Name of the environment variable to be used as tag"
     required: false
-    default: 'DOCKER_IMAGE_TAG'
+    default: "DOCKER_IMAGE_TAG"
 outputs:
   namespace: # id of the output
-    description: 'The kubernetes namespace where the application is deployed to'
+    description: "The kubernetes namespace where the application is deployed to"
     value: "${{ steps.deploy.outputs.namespace }}"
   branch_short: # id of the output
-    description: 'The name of the kubernetes branch (eg: ft-some-name)'
+    description: "The name of the kubernetes branch (eg: ft-some-name)"
     value: "${{ steps.deploy.outputs.branch_short }}"
 runs:
   using: "composite"
@@ -103,7 +103,7 @@ runs:
         gcloud container clusters get-credentials ${{ inputs.gkeClusterName }} --zone ${{ inputs.gcpClusterZone }}
     - name: Add helm repositories
       shell: bash
-      run: |- # helm 3.6.1 require helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS --pass-credentials
+      run: |-
         echo "Adding helm repositories.."
         counter=0
         REPO_FILE="$(mktemp --suffix .json)"
@@ -113,7 +113,7 @@ runs:
           HELM_LOCAL_PASS="$(jq -r ".repositories[$counter].password | select (.!=null)" "$REPO_FILE")"
           HELM_LOCAL_URL="$(jq -r ".repositories[$counter].url | select (.!=null)" "$REPO_FILE")"
           if [ -n  "$HELM_LOCAL_USER" ] ; then
-            helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS
+            helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS --pass-credentials
           else
             helm repo add $repo $HELM_LOCAL_URL
           fi
