@@ -70,7 +70,11 @@ inputs:
   dockerImageTagEnvName:
     description: "Name of the environment variable to be used as tag"
     required: false
-    default: "DOCKER_IMAGE_TAG"
+    default: 'DOCKER_IMAGE_TAG'
+  deployFromPR:
+    description: 'Flag that indicates the deployment will be from a Pull Request'
+    required: false
+    default: ''
 outputs:
   namespace: # id of the output
     description: "The kubernetes namespace where the application is deployed to"
@@ -132,9 +136,14 @@ runs:
       shell: bash
       id: deploy
       run: |-
-        BRANCH_LOWER="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+        if [ "${{ inputs.deployFromPR }}" != ""]; then
+          BRANCH_LOWER="$(echo "$GITHUB_HEAD_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+          BRANCH_TYPE=$BRANCH_LOWER
+        else
+          BRANCH_LOWER="$(echo "$GITHUB_REF" | tr '[:upper:]' '[:lower:]' | sed 's/_/-/g')"
+          BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 3)
+        fi
 
-        BRANCH_TYPE=$(echo $BRANCH_LOWER | cut -d'/' -f 3)
         FEAT_FULL_NAME="$(printf "%s" "${BRANCH_LOWER##*/}" )"
         FEAT_NAME="${FEAT_FULL_NAME:0:30}"
         NAMESPACE=""
