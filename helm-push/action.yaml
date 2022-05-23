@@ -74,7 +74,7 @@ runs:
           HELM_LOCAL_PASS="$(jq -r ".repositories[$counter].password | select (.!=null)" "$REPO_FILE")"
           HELM_LOCAL_URL="$(jq -r ".repositories[$counter].url | select (.!=null)" "$REPO_FILE")"
           if [ -n  "$HELM_LOCAL_USER" ] ; then
-            helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS
+            helm repo add $repo $HELM_LOCAL_URL --username $HELM_LOCAL_USER --password $HELM_LOCAL_PASS --pass-credentials
           else
             helm repo add $repo $HELM_LOCAL_URL
           fi
@@ -82,7 +82,7 @@ runs:
         done
     - name: Install helm-push helm plugin
       shell: bash
-      run: helm plugin install https://github.com/chartmuseum/helm-push.git
+      run: helm plugin install https://github.com/chartmuseum/helm-push.git --version=v0.9.0
     - name: Override docker image tag to be used
       shell: bash
       run: ./yq w -i ${{ inputs.helmChartPath }}/values.yaml ${{ inputs.dockerImageTagKeyPath}} "${{ inputs.dockerImageTag }}"
