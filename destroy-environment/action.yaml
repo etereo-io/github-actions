@@ -49,8 +49,7 @@ runs:
           export NAMESPACE+="-hot-"$FEAT_NAME
           export BRANCH_SHORT="hot-"$FEAT_NAME
           echo "Deleting namespace $NAMESPACE for hotfix branch $BRANCH_LOWER"
-          kubectl delete namespace $NAMESPACE
+          kubectl delete namespace $NAMESPACE       
         else
-          echo "Error branch type do not match"
-          exit 1;
+          echo "Branch doesn't matches, all fine!"
         fi
